@@ -38,14 +38,9 @@ def train(
     learning_rate: float = 3e-4,
     cutoff_len: int = 256,
     val_set_size: int = 2000,
-    # lora hyperparams
-    lora_r: int = 8,
-    lora_alpha: int = 16,
-    lora_dropout: float = 0.05,
-    lora_target_modules: List[str] = [
-        "q_proj",
-        "v_proj",
-    ],
+    # LLamaAdapter hyperparams
+    adapter_len: int = 10,
+    adapter_layers: int = 30,
     # llm hyperparams
     train_on_inputs: bool = True,  # if False, masks out inputs in loss
     add_eos_token: bool = False,
@@ -70,10 +65,8 @@ def train(
             f"learning_rate: {learning_rate}\n"
             f"cutoff_len: {cutoff_len}\n"
             f"val_set_size: {val_set_size}\n"
-            f"lora_r: {lora_r}\n"
-            f"lora_alpha: {lora_alpha}\n"
-            f"lora_dropout: {lora_dropout}\n"
-            f"lora_target_modules: {lora_target_modules}\n"
+            f"adapter_len: {adapter_len}\n"
+            f"adapter_layers: {adapter_layers}\n"
             f"train_on_inputs: {train_on_inputs}\n"
             f"add_eos_token: {add_eos_token}\n"
             f"group_by_length: {group_by_length}\n"
@@ -173,17 +166,7 @@ def train(
         return tokenized_full_prompt
 
     model = prepare_model_for_int8_training(model)
-    # peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=10)
-    
 
-    # config = LoraConfig(
-    #     r=lora_r,
-    #     lora_alpha=lora_alpha,
-    #     target_modules=lora_target_modules,
-    #     lora_dropout=lora_dropout,
-    #     bias="none",
-    #     task_type="CAUSAL_LM",
-    # )
     config = AdaptionPromptConfig(adapter_len=10,adapter_layers=30, task_type="CAUSAL_LM")
     model = get_peft_model(model, config)
 
