@@ -62,6 +62,27 @@ python finetune.py \
     --group_by_length
 ```
 
+### Fine-tune with LLaMA Adapter
+
+To use LLamA Adapter use the following:
+
+```bash
+python llama-adapter-fine-tuning.py \
+    --base_model 'decapoda-research/llama-7b-hf' \
+    --data_path 'yahma/alpaca-cleaned' \
+    --output_dir './lora-alpaca' \
+    --batch_size 128 \
+    --micro_batch_size 4 \
+    --num_epochs 3 \
+    --learning_rate 1e-4 \
+    --cutoff_len 512 \
+    --val_set_size 2000 \
+    --adapter_len 10 \
+    --adapter_layers 30 \
+    --train_on_inputs \
+    --group_by_length
+```
+
 ### Inference (`generate.py`)
 
 This file reads the foundation model from the Hugging Face model hub and the LoRA weights from `tloen/alpaca-lora-7b`, and runs a Gradio interface for inference on a specified input. Users should treat this as example code for the use of the model, and modify it as needed.
