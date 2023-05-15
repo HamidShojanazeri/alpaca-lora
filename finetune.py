@@ -23,7 +23,8 @@ from peft import (
 from transformers import LlamaForCausalLM, LlamaTokenizer
 
 from utils.prompter import Prompter
-
+from transformers import AutoModelForCausalLM
+from peft import get_peft_config, get_peft_model, PrefixTuningConfig, TaskType, PeftType
 
 def train(
     # model/data params
@@ -172,6 +173,8 @@ def train(
         return tokenized_full_prompt
 
     model = prepare_model_for_int8_training(model)
+    # peft_config = PrefixTuningConfig(task_type=TaskType.CAUSAL_LM, num_virtual_tokens=10)
+    
 
     config = LoraConfig(
         r=lora_r,
@@ -228,18 +231,20 @@ def train(
         # keeps Trainer from trying its own DataParallelism when more than 1 gpu is available
         model.is_parallelizable = True
         model.model_parallel = True
-
+    num_shards = 20
+    train_shard_dataset = train_data.shard(num_shards, index=0)
+    val_shard_dataset = val_data.shard(num_shards, index=0)
     trainer = transformers.Trainer(
         model=model,
-        train_dataset=train_data,
-        eval_dataset=val_data,
+        train_dataset=train_shard_dataset,
+        eval_dataset=val_shard_dataset,
         args=transformers.TrainingArguments(
             per_device_train_batch_size=micro_batch_size,
             gradient_accumulation_steps=gradient_accumulation_steps,
             warmup_steps=100,
             num_train_epochs=num_epochs,
             learning_rate=learning_rate,
-            fp16=True,
+            # fp16=True,
             logging_steps=10,
             optim="adamw_torch",
             evaluation_strategy="steps" if val_set_size > 0 else "no",
